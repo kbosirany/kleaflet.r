@@ -1,0 +1,66 @@
+# kleaflet.r
+
+Site: <https://kbosirany.github.io/kleaflet.r/> (development version:
+[/dev](https://kbosirany.github.io/kleaflet.r/dev/))
+
+leaflet is powerful, but a map with a palette, a legend, popups and
+layer groups quickly costs a dozen lines of `addX()` calls, formulas
+(`~col`) and `colorNumeric()` / `addLegend()` bookkeeping.
+**kleaflet.r** draws a complete map in one short call (coordinates,
+colours, legend, popups, labels, groups, base map, view), and maps stay
+composable through the `kleaflet` S3 class. It is the leaflet
+counterpart of [kggplot](https://github.com/kbosirany/kggplot).
+
+## Installation
+
+``` r
+
+# install.packages("pak")
+pak::pak("kbosirany/kleaflet.r")
+```
+
+## Example
+
+``` r
+
+library(kleaflet.r)
+
+# Points coloured by a column: palette, legend and popups included
+kleaflet(quakes, color = "mag", size = "depth", popup = c("mag", "depth"),
+         title = "Fiji earthquakes", theme = "light")
+
+# Discrete colours, hover labels from a template, one switchable layer per group
+q <- quakes
+q$class <- cut(q$mag, c(4, 5, 6, 7))
+kleaflet(q, color = "class", group = "class", label = "{mag} Mw",
+         palette = "inrae")
+
+# Choropleth map from an sf object
+nc <- sf::st_read(system.file("shape/nc.shp", package = "sf"), quiet = TRUE)
+kleaflet(nc, fill = "SID74", palette = "YlOrRd", scale = "bin", bins = 5,
+         popup = "<b>{NAME}</b><br>{SID74} cases")
+
+# Superpose layers: shared palette and legend
+a <- data.frame(lon = c(2.35, 2.40), lat = c(48.85, 48.87))
+b <- data.frame(lon = c(2.30, 2.33), lat = c(48.84, 48.88))
+kleaflet(a, color = "Stations") + kleaflet(b, color = "Sensors")
+
+# INRAE theme: charter colours for the map, the legend, the popups and the
+# palette (discrete for classes, sequential for numbers)
+kleaflet(nc, fill = "SID74", theme = "inrae", title = "Cases in 1974",
+         popup = "<b>{NAME}</b><br>{SID74} cases")
+
+# A regular leaflet map, to go further or to use in Shiny
+as_leaflet(kleaflet(quakes, color = "mag")) |> leaflet::addScaleBar()
+```
+
+See
+[`vignette("kleaflet")`](https://kbosirany.github.io/kleaflet.r/dev/articles/kleaflet.md)
+(“Get started”) for the full tour: input data, layer types, colours and
+legends, popups and labels, groups, themes, composing maps, and
+extending kleaflet.r with your own input classes, layer types and
+themes.
+
+Branch, version and release conventions are those of
+[kpkg.r](https://github.com/kbosirany/kpkg.r):
+`vignette("workflow", package = "kpkg.r")`.

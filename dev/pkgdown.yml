@@ -1,0 +1,9 @@
+pandoc: 3.8.3
+pkgdown: 2.2.1
+pkgdown_sha: ~
+articles:
+  kleaflet: kleaflet.html
+last_built: 2026-10-03T18:53Z
+urls:
+  reference: https://kbosirany.github.io/kleaflet.r/reference
+  article: https://kbosirany.github.io/kleaflet.r/articles
