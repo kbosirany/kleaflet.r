@@ -1,0 +1,12 @@
+# Template kpkg.r 0.1.0.9000: project/_pkgdown.yml
+url: https://kbosirany.github.io/kleaflet.r/
+
+lang: en
+
+template:
+  bootstrap: 5
+
+# The site of the main branch is published at the root, the one of the dev
+# branch in /dev (see the pkgdown workflow or .gitlab-ci.yml).
+development:
+  mode: auto

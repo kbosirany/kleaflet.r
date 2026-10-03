@@ -1,0 +1,40 @@
+Package: kleaflet.r
+Title: Concise, Composable Interactive Maps from a Single Call
+Version: 0.0.0.9000
+Authors@R: c(
+    person(
+      given = c("Kevin", "Bosirany"),
+      family = "Orlando",
+      email = "kevinbosirany@gmail.com",
+      role = c("aut", "cre"),
+      comment = c(ORCID = "0009-0009-2784-3108")
+    )
+  )
+Description: Draw a complete interactive 'leaflet' map (coordinates,
+    colour palettes, legends, popups, labels, groups, base map, view) with a
+    single short call, and compose maps with the '+' operator through the
+    'kleaflet' S3 class. Layer types, themes and palettes live in extensible
+    registries.
+License: AGPL (>= 3)
+URL: https://github.com/kbosirany/kleaflet.r,
+    https://kbosirany.github.io/kleaflet.r/
+BugReports: https://github.com/kbosirany/kleaflet.r/issues
+Encoding: UTF-8
+Depends:
+    R (>= 4.1.0)
+Imports:
+    grDevices,
+    htmltools,
+    htmlwidgets,
+    leaflet (>= 2.1.0),
+    utils
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
+Suggests:
+    knitr,
+    rmarkdown,
+    sf,
+    testthat (>= 3.0.0),
+    withr
+VignetteBuilder: knitr
+Config/testthat/edition: 3

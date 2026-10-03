@@ -1,0 +1,187 @@
+---
+title: "Get started with kleaflet.r"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Get started with kleaflet.r}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(kleaflet.r)
+```
+
+A leaflet map with a palette, a legend and popups normally needs a pile of
+`addX()` calls, `~column` formulas and `color*()` helpers. `kleaflet()` does
+the bookkeeping from a single call, and returns a `kleaflet` object that you
+can compose, modify, or turn into a regular leaflet map.
+
+## Input data
+
+`kleaflet()` takes a data frame with longitude and latitude columns (guessed
+from names such as `lon`, `lng`, `long`, `longitude`, `lat`, `latitude`; or
+given with `lon` and `lat`), an `sf` object (reprojected to WGS84), a
+two-column matrix or a named list.
+
+```{r input}
+kleaflet(quakes)
+kleaflet(data.frame(x = c(2.35, 2.4), y = c(48.85, 48.87)), lon = "x", lat = "y")
+```
+
+## Colours, sizes and legends
+
+A column given to `color` is coloured with a palette: a continuous scale for
+numbers, a discrete one otherwise. The legend and its title come for free.
+`size` and `opacity` rescale a numeric column to a readable range.
+
+```{r colour}
+kleaflet(quakes, color = "mag", size = "depth", opacity = "stations",
+         size_range = c(2, 12))
+```
+
+Numeric colours can be cut in classes with `scale = "bin"` or
+`"quantile"`, and `bins`:
+
+```{r bins}
+kleaflet(quakes, color = "mag", palette = "YlOrRd", scale = "quantile",
+         bins = 4, labels = list(color = "Magnitude"))
+```
+
+A palette is a vector of colours (named to fix the colour of each level), a
+registered name (`kleaf_palettes()`), the name of an RColorBrewer or viridis
+palette, or a function of `n`.
+
+```{r palette}
+q <- quakes
+q$class <- cut(q$mag, c(4, 5, 6, 7), labels = c("low", "mid", "high"))
+kleaflet(q, color = "class",
+         palette = c(low = "#2ecc71", mid = "#f1c40f", high = "#e74c3c"))
+```
+
+Fixed values are not mappings: wrap colours in `I()`, or give numbers.
+
+```{r fixed}
+kleaflet(quakes, color = I("tomato"), size = 3, opacity = 0.4)
+```
+
+## Popups and labels
+
+`popup` (on click) and `label` (on hover) accept `TRUE` (all columns), column
+names, a template with `{column}`, a function of the data returning HTML, or
+one string per row. Values are HTML-escaped.
+
+```{r popups}
+kleaflet(q, color = "class",
+         popup = "<b>Magnitude {mag}</b><br>Depth: {depth} km",
+         label = "{class}")
+kleaflet(q, color = "class", popup = c("mag", "depth", "stations"))
+```
+
+## Spatial data
+
+With `sf` data the layer type follows the geometry: polygons, lines or
+circles. Choropleth maps are one call away.
+
+```{r sf, eval = requireNamespace("sf", quietly = TRUE)}
+nc <- sf::st_read(system.file("shape/nc.shp", package = "sf"), quiet = TRUE)
+kleaflet(nc, fill = "SID74", palette = "YlOrRd", scale = "bin", bins = 5,
+         popup = "<b>{NAME}</b><br>{SID74} cases", theme = "light",
+         labels = list(fill = "SID74 (1974)"))
+```
+
+## Groups
+
+`group` splits a layer in one overlay per value, with a layers control.
+
+```{r groups}
+kleaflet(q, color = "class", group = "class")
+```
+
+## Layer types
+
+`kleaf_types()` lists them: `circle` (default for points), `circle_m` (radius
+in metres), `marker`, `cluster`, `polygon`, `line`.
+
+```{r types}
+kleaf_types()
+kleaflet(quakes, type = "cluster", popup = "mag")
+```
+
+## Themes: base map and palette
+
+A theme bundles base map tiles and a palette. `tiles` overrides the base map
+(several give a switcher), `theme` can also be the name of any provider of
+`leaflet::providers`.
+
+```{r themes}
+kleaf_themes()
+kleaflet(q, color = "class", theme = "inrae", title = "Fiji earthquakes",
+         caption = "Source: datasets::quakes")
+kleaflet(q, tiles = c("CartoDB.Positron", "Esri.WorldImagery"))
+```
+
+Add your own with `kleaf_register_theme()` and `kleaf_register_palette()`;
+`options(kleaflet.theme = "inrae")` sets a session default.
+
+## Composing maps
+
+`+` adds the layers of another `kleaflet`; colours and legends are shared.
+Settings of the right-hand side (theme, titles, view...) win.
+
+```{r compose}
+a <- data.frame(lon = c(2.35, 2.40), lat = c(48.85, 48.87))
+b <- data.frame(lon = c(2.30, 2.33), lat = c(48.84, 48.88))
+kleaflet(a, color = "Stations") + kleaflet(b, color = "Sensors")
+```
+
+Pipe-friendly modifiers return a modified `kleaflet`: `kleaf_add()`,
+`kleaf_labs()`, `kleaf_theme()`, `kleaf_tiles()`, `kleaf_palette()`,
+`kleaf_legend()`, `kleaf_view()` and `kleaf_controls()`.
+
+```{r modify}
+kleaflet(q, color = "mag") |>
+  kleaf_add(type = "marker", popup = "mag") |>
+  kleaf_labs(title = "Fiji", color = "Magnitude") |>
+  kleaf_palette("Reds", scale = "bin", bins = 4) |>
+  kleaf_legend("bottomleft") |>
+  kleaf_view(c(176, -20, 5)) |>
+  kleaf_controls(scale_bar = TRUE, minimap = TRUE)
+```
+
+A function of the map, added with `+`, runs last: it is the escape hatch for
+anything leaflet (or one of its extensions) can do.
+
+```{r extras}
+kleaflet(quakes, color = "mag") + (function(m) leaflet::addScaleBar(m))
+```
+
+## Going back to leaflet
+
+`as_leaflet()` returns the regular leaflet map, to continue with `|>`, to use
+in Shiny (`leaflet::renderLeaflet(as_leaflet(p))`) or to save, with
+`kleaf_save(p, "map.html")`.
+
+```{r as_leaflet}
+as_leaflet(kleaflet(quakes, color = "mag")) |>
+  leaflet::addCircleMarkers(lng = 178, lat = -20, radius = 20, color = "red")
+```
+
+## Extending kleaflet.r
+
+* **Input classes**: define `as_kdata.<class>()` returning a data frame or an
+  `sf` object. It may set the attributes `kleaf_lon`, `kleaf_lat` and
+  `kleaf_type` as defaults.
+* **Layer types**: `kleaf_register_type(name, fun, geometry, aes, params)`
+  says which leaflet function to call and which of its arguments each
+  aesthetic sets.
+* **Themes and palettes**: `kleaf_register_theme()` and
+  `kleaf_register_palette()`.
+
+```{r extend}
+kleaf_register_type(
+  "big_dot", "addCircleMarkers", aes = c(colour = "color"),
+  params = list(radius = 12, fillOpacity = 0.9)
+)
+kleaflet(quakes, color = "mag", type = "big_dot")
+```
