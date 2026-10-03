@@ -3,7 +3,7 @@ pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   kleaflet: kleaflet.html
-last_built: 2026-10-03T18:53Z
+last_built: 2026-10-03T19:27Z
 urls:
   reference: https://kbosirany.github.io/kleaflet.r/reference
   article: https://kbosirany.github.io/kleaflet.r/articles
