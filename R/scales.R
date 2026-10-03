@@ -8,7 +8,7 @@ make_scale <- function(vals, pal, scale, bins) {
     if (!all(is.finite(rng))) {
       stop("Can't build a colour scale: no finite value.", call. = FALSE)
     }
-    cols <- continuous_palette(pal)
+    cols <- continuous_palette(pal$continuous)
     f <- switch(
       scale,
       numeric = leaflet::colorNumeric(cols, domain = rng),
@@ -23,7 +23,7 @@ make_scale <- function(vals, pal, scale, bins) {
     vals, function(v) if (is.factor(v)) levels(v) else unique(as.character(v))
   )))
   lv <- lv[!is.na(lv)]
-  f <- leaflet::colorFactor(discrete_palette(pal, lv), domain = lv)
+  f <- leaflet::colorFactor(discrete_palette(pal$discrete, lv), domain = lv)
   list(pal = f, kind = "factor", values = lv)
 }
 

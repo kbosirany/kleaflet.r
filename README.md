@@ -59,6 +59,11 @@ a <- data.frame(lon = c(2.35, 2.40), lat = c(48.85, 48.87))
 b <- data.frame(lon = c(2.30, 2.33), lat = c(48.84, 48.88))
 kleaflet(a, color = "Stations") + kleaflet(b, color = "Sensors")
 
+# INRAE theme: charter colours for the map, the legend, the popups and the
+# palette (discrete for classes, sequential for numbers)
+kleaflet(nc, fill = "SID74", theme = "inrae", title = "Cases in 1974",
+         popup = "<b>{NAME}</b><br>{SID74} cases")
+
 # A regular leaflet map, to go further or to use in Shiny
 as_leaflet(kleaflet(quakes, color = "mag")) |> leaflet::addScaleBar()
 ```

@@ -41,6 +41,7 @@ as_leaflet.kleaflet <- function(x, ...) {
   map <- add_layers_control(map, res, tiles)
   map <- add_view(map, res, x$view)
   map <- add_map_titles(map, x$labels)
+  map <- add_theme_css(map, prep$style)
   if (isTRUE(x$scale_bar)) map <- leaflet::addScaleBar(map)
   if (isTRUE(x$minimap)) map <- leaflet::addMiniMap(map)
 
@@ -58,7 +59,7 @@ prepare <- function(x) {
   list(
     res = lapply(res, colorize, scales = scales), scales = scales,
     titles = build_titles(res, x$labels),
-    tiles = resolve_tiles(x$tiles %||% theme$tiles)
+    tiles = resolve_tiles(x$tiles %||% theme$tiles), style = theme$style
   )
 }
 
@@ -114,8 +115,9 @@ add_view <- function(map, res, view) {
 
 # Title and caption as map controls
 add_map_titles <- function(map, labels) {
-  box <- function(text, size, weight) {
+  box <- function(text, size, weight, class) {
     htmltools::tags$div(
+      class = class,
       style = paste0(
         "background:rgba(255,255,255,.85);padding:4px 10px;",
         "border-radius:4px;font-size:", size, ";font-weight:", weight
@@ -126,13 +128,14 @@ add_map_titles <- function(map, labels) {
   title <- labels$title
   if (length(title) == 1L && !is.na(title)) {
     map <- leaflet::addControl(
-      map, box(title, "16px", "bold"), position = "topright"
+      map, box(title, "16px", "bold", "kleaf-title"), position = "topright"
     )
   }
   caption <- labels$caption
   if (length(caption) == 1L && !is.na(caption)) {
     map <- leaflet::addControl(
-      map, box(caption, "11px", "normal"), position = "bottomleft"
+      map, box(caption, "11px", "normal", "kleaf-caption"),
+      position = "bottomleft"
     )
   }
   map
@@ -157,4 +160,11 @@ kleaf_save <- function(p, file, selfcontained = TRUE, ...) {
     as_leaflet(p), file = file, selfcontained = selfcontained, ...
   )
   invisible(file)
+}
+
+# Colours and fonts of the theme, as a style sheet added to the page
+add_theme_css <- function(map, style) {
+  css <- theme_css(style)
+  if (is.null(css)) return(map)
+  htmlwidgets::prependContent(map, htmltools::tags$style(htmltools::HTML(css)))
 }

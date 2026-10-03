@@ -26,7 +26,8 @@ two-column matrix or a named list.
 
 ```{r input}
 kleaflet(quakes)
-kleaflet(data.frame(x = c(2.35, 2.4), y = c(48.85, 48.87)), lon = "x", lat = "y")
+kleaflet(data.frame(x = c(2.35, 2.4), y = c(48.85, 48.87)),
+         lon = "x", lat = "y")
 ```
 
 ## Colours, sizes and legends
@@ -123,6 +124,36 @@ kleaflet(q, tiles = c("CartoDB.Positron", "Esri.WorldImagery"))
 
 Add your own with `kleaf_register_theme()` and `kleaf_register_palette()`;
 `options(kleaflet.theme = "inrae")` sets a session default.
+
+### The INRAE theme
+
+`theme = "inrae"` follows the INRAE graphic charter: a light base map, and the
+institutional colours (turquoise accent, grey text) on the legend, the title,
+the popups and the layers control. The palette applies to `color` and `fill`
+alike: the discrete INRAE palette for classes, the sequential `"inrae_seq"`
+for numbers. `"inrae_div"` is a diverging variant, to be asked for with
+`palette = "inrae_div"`.
+
+```{r inrae}
+kleaflet(q, color = "class", theme = "inrae", title = "Fiji earthquakes")
+kleaflet(q, fill = "depth", color = I("white"), theme = "inrae",
+         popup = c("mag", "depth"), title = "Depth")
+```
+
+The charter sets Raleway for titles and Avenir Next Pro Condensed for the
+text. They are not forced, since they need to be installed: set
+`options(kleaflet.title_family = "Raleway")` and
+`options(kleaflet.base_family = "Avenir Next Condensed")`.
+
+A theme of your own is a base map, a palette and a style:
+
+```{r style}
+kleaf_register_theme(
+  "forest", tiles = "CartoDB.Voyager", palette = c("#2d6a4f", "#95d5b2"),
+  style = list(accent = "#2d6a4f", text = "#1b4332", background = "#f1faee")
+)
+kleaflet(q, color = "class", theme = "forest", title = "Forest theme")
+```
 
 ## Composing maps
 

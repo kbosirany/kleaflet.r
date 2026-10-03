@@ -177,7 +177,9 @@ resolve_layer <- function(layer) {
   aes <- apply_fill_follows(spec, layer$mapped, layer$const, layer$fixed)
 
   geom <- resolve_geometry(layer$source, spec, type, aes$mapped)
-  if (!any(geom$ok)) stop("No row with valid coordinates to map.", call. = FALSE)
+  if (!any(geom$ok)) {
+    stop("No row with valid coordinates to map.", call. = FALSE)
+  }
   if (any(!geom$ok)) {
     message(sum(!geom$ok), " row(s) without valid coordinates dropped.")
   }
@@ -219,6 +221,8 @@ resolve_layer <- function(layer) {
   if (is.null(group) && !is.null(fixed$group)) {
     group <- rep_len(as.character(fixed$group[1L]), n)
   }
+  # rows without group are drawn too, in a group of their own
+  if (!is.null(group)) group <- ifelse(is.na(group), "NA", as.character(group))
   vals$group <- NULL
   fixed$group <- NULL
 
@@ -226,7 +230,7 @@ resolve_layer <- function(layer) {
     spec = spec, type = type, n = n, lng = geom$lng[idx], lat = geom$lat[idx],
     geo = if (inherits(src, "sf")) src[idx, ],
     vals = vals, fixed = fixed,
-    group = if (!is.null(group)) as.character(group),
+    group = group,
     popup = build_html(layer$popup, data, n, "popup"),
     label = build_html(layer$label, data, n, "label"),
     params = layer$params, labels = layer_labels(layer)

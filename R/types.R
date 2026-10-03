@@ -131,14 +131,16 @@ register_builtin_types <- function() {
     "circle", "addCircleMarkers",
     aes = c(colour = "color", fill = "fillColor", size = "radius",
             opacity = "fillOpacity"),
-    params = list(radius = 5, weight = 1, opacity = 1, fillOpacity = 0.7),
+    params = list(radius = 5, weight = 1, opacity = 1, fillOpacity = 0.7,
+                  color = "white", fillColor = "#3388ff"),
     fill_follows_colour = TRUE
   )
   reg(
     "circle_m", "addCircles",
     aes = c(colour = "color", fill = "fillColor", size = "radius",
             opacity = "fillOpacity"),
-    params = list(radius = 1000, weight = 1, opacity = 1, fillOpacity = 0.5),
+    params = list(radius = 1000, weight = 1, opacity = 1, fillOpacity = 0.5,
+                  color = "white", fillColor = "#3388ff"),
     fill_follows_colour = TRUE, size_range = c(500, 20000)
   )
   reg("marker", "addMarkers")

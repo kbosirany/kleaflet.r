@@ -13,7 +13,9 @@ test_that("coordinates are guessed from the column names", {
   expect_equal(first_call(kleaflet(d))$args$lng, c(1, 2))
   expect_equal(first_call(kleaflet(quakes))$args$lat, quakes$lat)
   expect_equal(
-    first_call(kleaflet(data.frame(a = 1, b = 2), lon = "a", lat = "b"))$args$lat,
+    first_call(
+      kleaflet(data.frame(a = 1, b = 2), lon = "a", lat = "b")
+    )$args$lat,
     2
   )
   expect_error(kleaflet(data.frame(a = 1)) |> as_leaflet(), "longitude")
@@ -140,4 +142,30 @@ test_that("every built-in type renders", {
   expect_s3_class(render(kleaflet(x))$map, "leaflet")
   lines <- sf::st_cast(x, "MULTILINESTRING")
   expect_s3_class(render(kleaflet(lines))$map, "leaflet")
+})
+
+test_that("rows without group are drawn in a group of their own", {
+  d <- stations
+  d$g <- c("a", NA, "a")
+  calls <- all_calls(kleaflet(d, group = "g"))
+  expect_equal(vapply(calls, function(cl) cl$args$group, ""), c("a", "NA"))
+  expect_equal(sum(vapply(calls, function(cl) length(cl$args$lng), 1L)), 3)
+  m <- render(kleaflet(d, group = "g"))$map
+  ctrl <- m$x$calls[[which(vapply(m$x$calls, `[[`, "", "method") ==
+                             "addLayersControl")]]
+  expect_false(any(is.na(unlist(ctrl$args))))
+})
+
+test_that("circles have a white border and a blue fill by default", {
+  cl <- first_call(kleaflet(stations))
+  expect_equal(cl$args$color, "white")
+  expect_equal(cl$args$fillColor, "#3388ff")
+  # a mapped fill alone keeps the white border
+  f <- first_call(kleaflet(stations, fill = "n"))
+  expect_equal(f$args$color, "white")
+  expect_length(f$args$fillColor, 3)
+  # a colour sets the border and the fill
+  c1 <- first_call(kleaflet(stations, color = I("red")))
+  expect_equal(c1$args$color, "red")
+  expect_equal(c1$args$fillColor, "red")
 })

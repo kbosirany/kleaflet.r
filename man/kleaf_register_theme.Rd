@@ -7,9 +7,9 @@
 \alias{kleaf_palettes}
 \title{Themes and palettes}
 \usage{
-kleaf_register_theme(name, tiles = NULL, palette = NULL)
+kleaf_register_theme(name, tiles = NULL, palette = NULL, style = NULL)
 
-kleaf_register_palette(name, colors)
+kleaf_register_palette(name, colors, continuous = NULL)
 
 kleaf_themes()
 
@@ -25,16 +25,26 @@ switcher. \code{NULL} for the default tiles.}
 \item{palette}{Colours of the theme: a vector of colours, the name of a
 registered palette, or \code{NULL}.}
 
+\item{style}{Named list of colours and fonts for the interface of the map:
+\code{accent} (title bar, popup and legend border), \code{text}, \code{background},
+\code{font} and \code{title_font}. Missing entries keep the leaflet look. \code{NULL}
+for the default style.}
+
 \item{colors}{Character vector of colours (or a function of \code{n}).}
+
+\item{continuous}{Colours of the continuous scale (numeric \code{color} /
+\code{fill}) used with this palette: a vector of colours or the name of a
+registered palette. Default: \code{colors}.}
 }
 \value{
 \verb{kleaf_register_*()} return \code{name} invisibly; \code{kleaf_themes()} and
 \code{kleaf_palettes()} return the registered names.
 }
 \description{
-A kleaflet \emph{theme} bundles base map tiles and (optionally) a colour
-palette under one name, so \code{kleaflet(..., theme = "inrae")} styles the
-whole map. Register your own with \code{kleaf_register_theme()} and
+A kleaflet \emph{theme} bundles base map tiles, (optionally) a colour palette
+and a \emph{style} (colours and fonts of the legend, the title, the popups and
+the controls) under one name, so \code{kleaflet(..., theme = "inrae")} styles
+the whole map. Register your own with \code{kleaf_register_theme()} and
 \code{kleaf_register_palette()}.
 }
 \details{
@@ -43,6 +53,19 @@ the name of any provider of \link[leaflet:providers]{leaflet::providers} (\code{
 \code{light}/\code{minimal}, \code{dark}, \code{voyager}, \code{satellite}, \code{topo}, \code{inrae}.
 Set \code{options(kleaflet.theme = )} and \code{options(kleaflet.palette = )} to
 change the defaults session-wide.
+}
+\section{The INRAE theme}{
+
+\code{theme = "inrae"} follows the INRAE graphic charter v4.2: light base map,
+legend, title, popups and layers control in the institutional colours
+(turquoise accent, grey text), and the INRAE palettes for \code{color} and
+\code{fill}: \code{"inrae"} for discrete values and \code{"inrae_seq"} for numbers
+(\code{"inrae_div"} is a diverging variant, to use with \verb{palette =}). The
+charter sets Raleway for titles and Avenir Next Pro Condensed for the
+text. They are proprietary or need to be installed, so no font is forced:
+set \code{options(kleaflet.title_family = "Raleway")} and
+\code{options(kleaflet.base_family = "Avenir Next Condensed")}. The same
+options apply to every theme.
 
 A \code{palette} is: a vector of colours (named to fix the colour of each
 level), the name of a registered palette (\code{\link[=kleaf_palettes]{kleaf_palettes()}}), the name
@@ -51,6 +74,7 @@ function of \code{n}. Discrete scales take the first colours of a vector (or
 interpolate if there are not enough); continuous scales interpolate
 between them.
 }
+
 \examples{
 kleaf_themes()
 kleaf_register_palette("traffic", c("#2ecc71", "#f1c40f", "#e74c3c"))

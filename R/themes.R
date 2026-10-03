@@ -1,8 +1,9 @@
 #' Themes and palettes
 #'
-#' A kleaflet *theme* bundles base map tiles and (optionally) a colour
-#' palette under one name, so `kleaflet(..., theme = "inrae")` styles the
-#' whole map. Register your own with `kleaf_register_theme()` and
+#' A kleaflet *theme* bundles base map tiles, (optionally) a colour palette
+#' and a *style* (colours and fonts of the legend, the title, the popups and
+#' the controls) under one name, so `kleaflet(..., theme = "inrae")` styles
+#' the whole map. Register your own with `kleaf_register_theme()` and
 #' `kleaf_register_palette()`.
 #'
 #' A `theme` argument accepted by [kleaflet()] can be a registered name, or
@@ -11,6 +12,18 @@
 #' `light`/`minimal`, `dark`, `voyager`, `satellite`, `topo`, `inrae`.
 #' Set `options(kleaflet.theme = )` and `options(kleaflet.palette = )` to
 #' change the defaults session-wide.
+#'
+#' @section The INRAE theme:
+#' `theme = "inrae"` follows the INRAE graphic charter v4.2: light base map,
+#' legend, title, popups and layers control in the institutional colours
+#' (turquoise accent, grey text), and the INRAE palettes for `color` and
+#' `fill`: `"inrae"` for discrete values and `"inrae_seq"` for numbers
+#' (`"inrae_div"` is a diverging variant, to use with `palette =`). The
+#' charter sets Raleway for titles and Avenir Next Pro Condensed for the
+#' text. They are proprietary or need to be installed, so no font is forced:
+#' set `options(kleaflet.title_family = "Raleway")` and
+#' `options(kleaflet.base_family = "Avenir Next Condensed")`. The same
+#' options apply to every theme.
 #'
 #' A `palette` is: a vector of colours (named to fix the colour of each
 #' level), the name of a registered palette ([kleaf_palettes()]), the name
@@ -25,7 +38,14 @@
 #'   switcher. `NULL` for the default tiles.
 #' @param palette Colours of the theme: a vector of colours, the name of a
 #'   registered palette, or `NULL`.
+#' @param style Named list of colours and fonts for the interface of the map:
+#'   `accent` (title bar, popup and legend border), `text`, `background`,
+#'   `font` and `title_font`. Missing entries keep the leaflet look. `NULL`
+#'   for the default style.
 #' @param colors Character vector of colours (or a function of `n`).
+#' @param continuous Colours of the continuous scale (numeric `color` /
+#'   `fill`) used with this palette: a vector of colours or the name of a
+#'   registered palette. Default: `colors`.
 #'
 #' @return `kleaf_register_*()` return `name` invisibly; `kleaf_themes()` and
 #'   `kleaf_palettes()` return the registered names.
@@ -38,21 +58,34 @@
 #' kleaflet(quakes, color = "mag", theme = "traffic")
 #'
 #' @export
-kleaf_register_theme <- function(name, tiles = NULL, palette = NULL) {
+kleaf_register_theme <- function(name, tiles = NULL, palette = NULL,
+                                 style = NULL) {
   stopifnot(is.character(name), length(name) == 1L)
   if (!is.null(tiles) && !is.character(tiles)) {
     stop("`tiles` must be a character vector or NULL.", call. = FALSE)
   }
-  .kleaf$themes[[name]] <- list(tiles = tiles, palette = palette)
+  bad <- setdiff(names(style), style_keys)
+  if (length(style) && (is.null(names(style)) || length(bad))) {
+    stop("Unknown `style` entries: ", paste(bad, collapse = ", "),
+         ". Available: ", paste(style_keys, collapse = ", "), ".",
+         call. = FALSE)
+  }
+  .kleaf$themes[[name]] <- list(
+    tiles = tiles, palette = palette, style = style
+  )
   invisible(name)
 }
 
+style_keys <- c("accent", "text", "background", "font", "title_font")
+
 #' @export
 #' @rdname kleaf_register_theme
-kleaf_register_palette <- function(name, colors) {
+kleaf_register_palette <- function(name, colors, continuous = NULL) {
   stopifnot(is.character(name), length(name) == 1L)
   stopifnot(is.character(colors) || is.function(colors))
-  .kleaf$palettes[[name]] <- colors
+  stopifnot(is.null(continuous) || is.character(continuous) ||
+              is.function(continuous))
+  .kleaf$palettes[[name]] <- list(colors = colors, continuous = continuous)
   invisible(name)
 }
 
@@ -65,10 +98,19 @@ kleaf_themes <- function() names(.kleaf$themes)
 kleaf_palettes <- function() names(.kleaf$palettes)
 
 register_builtin_palettes <- function() {
+  # Colours of the INRAE graphic charter v4.2 (same palette as kggplot). The
+  # continuous palettes are tints built from the same colours: light blue to
+  # turquoise to violet (sequential), coral to light grey to turquoise
+  # (diverging).
+  kleaf_register_palette(
+    "inrae_seq", c("#cde9eb", "#9ed6e3", "#00a3a6", "#423089")
+  )
+  kleaf_register_palette("inrae_div", c("#ed6e6c", "#f4f3ef", "#00a3a6"))
   kleaf_register_palette(
     "inrae",
     c("#00a3a6", "#9dc544", "#423089", "#ed6e6c", "#c4c0b3", "#9ed6e3",
-      "#797870")
+      "#797870"),
+    continuous = "inrae_seq"
   )
   kleaf_register_palette(
     "okabe_ito",
@@ -85,8 +127,10 @@ register_builtin_themes <- function() {
   kleaf_register_theme("dark", tiles = "CartoDB.DarkMatter")
   kleaf_register_theme("satellite", tiles = "Esri.WorldImagery")
   kleaf_register_theme("topo", tiles = "OpenTopoMap")
-  # Colours of the INRAE graphic charter v4.2 (same palette as kggplot)
-  kleaf_register_theme("inrae", tiles = "CartoDB.Positron", palette = "inrae")
+  kleaf_register_theme(
+    "inrae", tiles = "CartoDB.Positron", palette = "inrae",
+    style = list(accent = "#00a3a6", text = "#797870", background = "#ffffff")
+  )
 }
 
 # Names of the base maps known by leaflet; NULL if they cannot be listed
@@ -97,7 +141,9 @@ known_providers <- function() {
 # Resolve `theme` to list(tiles = <character>, palette = <colors or NULL>)
 resolve_theme <- function(theme = NULL) {
   theme <- theme %||% getOption("kleaflet.theme")
-  if (is.null(theme)) return(list(tiles = NULL, palette = NULL))
+  if (is.null(theme)) {
+    return(list(tiles = NULL, palette = NULL, style = NULL))
+  }
   if (!is.character(theme) || length(theme) != 1L) {
     stop("`theme` must be a theme name.", call. = FALSE)
   }
@@ -112,7 +158,7 @@ resolve_theme <- function(theme = NULL) {
         call. = FALSE
       )
     }
-    entry <- list(tiles = theme, palette = NULL)
+    entry <- list(tiles = theme, palette = NULL, style = NULL)
   }
   entry
 }
@@ -137,11 +183,16 @@ resolve_tiles <- function(tiles) {
   unique(tiles)
 }
 
-# Resolve a palette spec to a character vector, a function, a palette name
-# (left to leaflet) or NULL
+# Entry of a registered palette: list(colors, continuous)
+palette_entry <- function(name) .kleaf$palettes[[name]]
+
+# Resolve a palette spec to list(discrete, continuous): each a character
+# vector, a function, a palette name (left to leaflet) or NULL
 resolve_palette <- function(palette) {
   palette <- palette %||% getOption("kleaflet.palette")
-  if (is.null(palette) || is.function(palette)) return(palette)
+  if (is.null(palette) || is.function(palette)) {
+    return(list(discrete = palette, continuous = palette))
+  }
   if (!is.character(palette)) {
     stop(
       "`palette` must be colours, a palette name or a function.",
@@ -149,16 +200,20 @@ resolve_palette <- function(palette) {
     )
   }
   is_name <- length(palette) == 1L && is.null(names(palette))
-  if (is_name && !is.null(.kleaf$palettes[[palette]])) {
-    return(.kleaf$palettes[[palette]])
+  entry <- if (is_name) palette_entry(palette)
+  if (is.null(entry)) return(list(discrete = palette, continuous = palette))
+  cont <- entry$continuous
+  if (is.character(cont) && length(cont) == 1L &&
+        !is.null(palette_entry(cont))) {
+    cont <- palette_entry(cont)$colors
   }
-  palette
+  list(discrete = entry$colors, continuous = cont %||% entry$colors)
 }
 
 # Colours (exactly one per level) or a palette name for a discrete scale
 discrete_palette <- function(pal, levels) {
   n <- length(levels)
-  pal <- pal %||% .kleaf$palettes[["okabe_ito"]]
+  pal <- pal %||% palette_entry("okabe_ito")$colors
   if (is.function(pal)) return(pal(n))
   if (!is.null(names(pal))) {
     missing <- setdiff(levels, names(pal))
@@ -182,4 +237,38 @@ continuous_palette <- function(pal) {
   if (is.null(pal)) return("viridis")
   if (is.function(pal)) return(pal(7L))
   unname(pal)
+}
+
+# CSS of the interface of the map. The fonts come from the style of the theme
+# or from options(kleaflet.base_family) / options(kleaflet.title_family).
+theme_css <- function(style) {
+  font <- getOption("kleaflet.base_family") %||% style$font
+  title_font <- getOption("kleaflet.title_family") %||% style$title_font %||%
+    font
+  if (!length(style) && is.null(font) && is.null(title_font)) return(NULL)
+  decl <- function(prop, value) {
+    if (!is.null(value)) paste0(prop, ": ", value, " !important;")
+  }
+  family <- function(f) {
+    if (!is.null(f)) decl("font-family", paste0("'", f, "', sans-serif"))
+  }
+  rule <- function(selector, ...) {
+    decl <- c(...)
+    if (length(decl)) paste0(selector, " { ", paste(decl, collapse = " "), " }")
+  }
+  accent <- style$accent
+  bar <- function(side, width) {
+    if (!is.null(accent)) decl(side, paste0(width, " solid ", accent))
+  }
+  css <- c(
+    rule(".info.legend", decl("background", style$background),
+         decl("color", style$text), bar("border", "1px"), family(font)),
+    rule(".kleaf-title", bar("border-left", "4px"),
+         decl("color", accent), family(title_font)),
+    rule(".kleaf-caption", decl("color", style$text), family(font)),
+    rule(".leaflet-popup-content-wrapper", bar("border-top", "3px"),
+         decl("color", style$text), family(font)),
+    rule(".leaflet-control-layers", decl("color", style$text), family(font))
+  )
+  if (length(css)) paste(css, collapse = "\n")
 }
