@@ -128,49 +128,60 @@ render_reports <- function(site, path = "reports") {
   invisible(output_dirs)
 }
 
-# Navbar entries of the books, as a pkgdown `override` list: a menu per
-# language, `reports_fr` or `reports_en` for the books ending with `-fr` or
-# `-en`, `reports` for the others, with the title of each book. The components
-# already defined in `_pkgdown.yml` are kept as they are, and the books that
-# they already link to get no entry. `NULL` if there is nothing to add.
+# The menu of the books: a header by language when there are several
+# languages (English, then French, then the books without language), none
+# otherwise.
+reports_menu <- function(lang, titles, hrefs) {
+  languages <- c("English", "Fran\u00e7ais", "Other")
+  names(languages) <- c("en", "fr", "")
+  present <- intersect(names(languages), unique(lang))
+  items <- function(i) {
+    lapply(i, function(k) list(text = titles[[k]], href = hrefs[[k]]))
+  }
+  if (length(present) == 1) {
+    return(items(seq_along(lang)))
+  }
+  menu <- list()
+  for (l in present) {
+    if (length(menu) > 0) {
+      menu <- c(menu, list(list(text = "---------")))
+    }
+    menu <- c(menu, list(list(text = languages[[l]])), items(which(lang == l)))
+  }
+  menu
+}
+
+# Navbar entry of the books, as a pkgdown `override` list: one menu,
+# `reports`, with the title of each book, and a header by language (the
+# `-en` or `-fr` end of the folder name) when there are several languages (see
+# `reports_menu()`). A component `reports` already defined in `_pkgdown.yml` is
+# kept as it is, and the books that the components already link to get no
+# entry. `NULL` if there is nothing to add.
 reports_navbar <- function(pkg, path = "reports") {
   books <- list_reports(path)
   navbar <- pkg$meta$navbar
-  linked <- unlist(lapply(navbar$components, function(x) {
+  linked <- as.character(unlist(lapply(navbar$components, function(x) {
     vapply(x$menu, function(item) item$href %||% "", character(1))
-  }))
+  })))
   books <- books[!vapply(books, function(book) {
     any(startsWith(linked, file.path("reports", book, "")))
   }, logical(1))]
-  if (length(books) == 0) {
+  if (length(books) == 0 || "reports" %in% names(navbar$components)) {
     return(NULL)
   }
   lang <- ifelse(
     grepl("-(fr|en)$", books), sub(".*-(fr|en)$", "\\1", books), ""
   )
-  components <- ifelse(nzchar(lang), paste0("reports_", lang), "reports")
-  new <- list()
-  for (component in setdiff(unique(components), names(navbar$components))) {
-    in_menu <- which(components == component)
-    new[[component]] <- list(
-      text = if (component == "reports") {
-        "Reports"
-      } else {
-        sprintf("Reports [%s]", sub("^reports_", "", component))
-      },
-      menu = lapply(in_menu, function(i) {
-        yml <- file.path(path, books[[i]], "_quarto.yml")
-        title <- yaml::read_yaml(yml)$book$title
-        list(
-          text = if (is.null(title)) books[[i]] else as.character(title),
-          href = file.path("reports", books[[i]], "index.html")
-        )
-      })
+  titles <- vapply(books, function(book) {
+    title <- yaml::read_yaml(file.path(path, book, "_quarto.yml"))$book$title
+    if (is.null(title)) book else as.character(title)
+  }, character(1))
+  new <- list(reports = list(
+    text = "Reports",
+    menu = reports_menu(
+      lang, unname(titles), file.path("reports", books, "index.html")
     )
-  }
-  if (length(new) == 0) {
-    return(NULL)
-  }
+  ))
   left <- navbar$structure$left
   if (is.null(left)) {
     left <- c("intro", "reference", "articles", "tutorials", "news")
