@@ -52,3 +52,20 @@ test_that("the view fits the data or is explicit", {
   one <- as_leaflet(kleaflet(stations[1, ]))
   expect_equal(one$x$setView[[2]], 12)
 })
+
+test_that("a SpatRaster is drawn as polygons, aggregated if heavy", {
+  skip_if_not_installed("terra")
+  skip_if_not_installed("sf")
+  r <- terra::rast(
+    nrows = 40, ncols = 40, xmin = 0, xmax = 4, ymin = 40, ymax = 44,
+    crs = "EPSG:4326", vals = seq_len(1600), names = "v"
+  )
+  d <- as_kdata(r)
+  expect_s3_class(d, "sf")
+  expect_equal(nrow(d), 1600)
+  expect_equal(names(d), c("v", "geometry"))
+  # aggregated by a factor 2 under a limit of 500 cells
+  expect_equal(nrow(as_kdata(r, max_cells = 500)), 400)
+  call <- first_call(kleaflet(r, fill = "v", weight = 0))
+  expect_equal(call$fun, leaflet::addPolygons)
+})

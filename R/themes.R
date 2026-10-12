@@ -121,14 +121,14 @@ register_builtin_palettes <- function() {
 
 register_builtin_themes <- function() {
   kleaf_register_theme("default", tiles = "OpenStreetMap")
-  kleaf_register_theme("light", tiles = "CartoDB.Positron")
-  kleaf_register_theme("minimal", tiles = "CartoDB.Positron")
-  kleaf_register_theme("voyager", tiles = "CartoDB.Voyager")
+  kleaf_register_theme("light", tiles = "Esri.WorldGrayCanvas")
+  kleaf_register_theme("minimal", tiles = "Esri.WorldGrayCanvas")
+  kleaf_register_theme("voyager", tiles = "Esri.WorldStreetMap")
   kleaf_register_theme("dark", tiles = "CartoDB.DarkMatter")
   kleaf_register_theme("satellite", tiles = "Esri.WorldImagery")
   kleaf_register_theme("topo", tiles = "OpenTopoMap")
   kleaf_register_theme(
-    "inrae", tiles = "CartoDB.Positron", palette = "inrae",
+    "inrae", tiles = "Esri.WorldGrayCanvas", palette = "inrae",
     style = list(accent = "#00a3a6", text = "#797870", background = "#ffffff")
   )
 }

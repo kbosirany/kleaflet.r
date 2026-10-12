@@ -169,3 +169,10 @@ test_that("circles have a white border and a blue fill by default", {
   expect_equal(c1$args$color, "red")
   expect_equal(c1$args$fillColor, "red")
 })
+
+test_that("a map with many features is drawn on a canvas", {
+  few <- as_leaflet(kleaflet(quakes[1:10, ], color = "mag"))
+  many <- as_leaflet(kleaflet(quakes, color = "mag"))
+  expect_false(isTRUE(few$x$options$preferCanvas))
+  expect_true(isTRUE(many$x$options$preferCanvas))
+})

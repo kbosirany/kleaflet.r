@@ -9,9 +9,17 @@
 #'
 #' Built-in methods: `data.frame` (and tibbles), `sf` (reprojected to WGS84),
 #' `sfc`, two-column `matrix` (longitude, latitude), `list` of equal-length
-#' vectors.
+#' vectors, and `SpatRaster` ('terra').
+#'
+#' A `SpatRaster` is drawn as polygons, one per cell (the layers are the
+#' columns, use `fill = "<layer>"` and `weight = 0`). To keep the map light,
+#' a raster of more than `max_cells` cells is first aggregated by an integer
+#' factor with the function `fun`.
 #'
 #' @param x Object to convert.
+#' @param max_cells For a `SpatRaster`, the maximum number of cells drawn.
+#' @param fun For a `SpatRaster`, the function of the aggregation (see
+#'   [terra::aggregate()]). Use `"modal"` for categories.
 #' @param ... Unused, for method extensions.
 #'
 #' @return A data frame or an `sf` object.
@@ -75,6 +83,24 @@ as_kdata.list <- function(x, ...) {
     stop("A list given to kleaflet() must be fully named.", call. = FALSE)
   }
   as_kdata.data.frame(as.data.frame(x, stringsAsFactors = FALSE))
+}
+
+#' @export
+#' @rdname as_kdata
+as_kdata.SpatRaster <- function(x, max_cells = 10000, fun = "mean", ...) {
+  if (!requireNamespace("terra", quietly = TRUE)) {
+    stop("A raster needs the 'terra' package.", call. = FALSE)
+  }
+  check_sf()
+  n <- terra::ncell(x)
+  if (n > max_cells) {
+    x <- terra::aggregate(x, fact = ceiling(sqrt(n / max_cells)), fun = fun,
+                          na.rm = TRUE)
+  }
+  out <- sf::st_as_sf(terra::as.polygons(x, aggregate = FALSE, na.rm = TRUE))
+  out <- as_kdata.sf(out)
+  attr(out, "kleaf_type") <- "polygon"
+  out
 }
 
 #' @export

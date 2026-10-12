@@ -7,6 +7,7 @@
 \alias{as_kdata.sfc}
 \alias{as_kdata.matrix}
 \alias{as_kdata.list}
+\alias{as_kdata.SpatRaster}
 \alias{as_kdata.default}
 \title{Convert an input object to a data frame (or sf) for kleaflet}
 \usage{
@@ -22,12 +23,19 @@ as_kdata(x, ...)
 
 \method{as_kdata}{list}(x, ...)
 
+\method{as_kdata}{SpatRaster}(x, max_cells = 10000, fun = "mean", ...)
+
 \method{as_kdata}{default}(x, ...)
 }
 \arguments{
 \item{x}{Object to convert.}
 
 \item{...}{Unused, for method extensions.}
+
+\item{max_cells}{For a \code{SpatRaster}, the maximum number of cells drawn.}
+
+\item{fun}{For a \code{SpatRaster}, the function of the aggregation (see
+\code{\link[terra:aggregate]{terra::aggregate()}}). Use \code{"modal"} for categories.}
 }
 \value{
 A data frame or an \code{sf} object.
@@ -43,7 +51,12 @@ when the call does not specify \code{lon}, \code{lat} or \code{type}.
 \details{
 Built-in methods: \code{data.frame} (and tibbles), \code{sf} (reprojected to WGS84),
 \code{sfc}, two-column \code{matrix} (longitude, latitude), \code{list} of equal-length
-vectors.
+vectors, and \code{SpatRaster} ('terra').
+
+A \code{SpatRaster} is drawn as polygons, one per cell (the layers are the
+columns, use \code{fill = "<layer>"} and \code{weight = 0}). To keep the map light,
+a raster of more than \code{max_cells} cells is first aggregated by an integer
+factor with the function \code{fun}.
 }
 \examples{
 as_kdata(matrix(c(2.35, 48.85, -0.12, 51.5), ncol = 2, byrow = TRUE))
