@@ -33,7 +33,12 @@ as_leaflet.kleaflet <- function(x, ...) {
   res <- prep$res
   tiles <- prep$tiles
 
-  map <- add_tiles(leaflet::leaflet(), tiles)
+  map <- add_tiles(
+    leaflet::leaflet(
+      options = leaflet::leafletOptions(preferCanvas = n_features(res) > 500L)
+    ),
+    tiles
+  )
   for (r in res) {
     for (cl in layer_calls(r)) map <- do.call(cl$fun, c(list(map), cl$args))
   }
@@ -83,6 +88,16 @@ add_layers_control <- function(map, res, tiles) {
     map, baseGroups = base, overlayGroups = groups,
     options = leaflet::layersControlOptions(collapsed = length(groups) > 6L)
   )
+}
+
+# Number of features (points, lines, polygons) of all the layers: a map with
+# many of them is drawn on a canvas, which is much faster than SVG
+n_features <- function(res) {
+  sum(vapply(
+    res,
+    function(r) if (is.null(r$geo)) length(r$lng) else nrow(r$geo),
+    numeric(1)
+  ))
 }
 
 # Bounding box c(lon1, lat1, lon2, lat2) of the layers
