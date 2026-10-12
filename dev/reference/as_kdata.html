@@ -75,6 +75,9 @@ when the call does not specify <code>lon</code>, <code>lat</code> or <code>type<
 <span><span class="co"># S3 method for class 'list'</span></span>
 <span><span class="fu">as_kdata</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
+<span><span class="co"># S3 method for class 'SpatRaster'</span></span>
+<span><span class="fu">as_kdata</span><span class="op">(</span><span class="va">x</span>, max_cells <span class="op">=</span> <span class="fl">10000</span>, fun <span class="op">=</span> <span class="st">"mean"</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
 <span><span class="co"># Default S3 method</span></span>
 <span><span class="fu">as_kdata</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -90,6 +93,15 @@ when the call does not specify <code>lon</code>, <code>lat</code> or <code>type<
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Unused, for method extensions.</p></dd>
 
+
+<dt id="arg-max-cells">max_cells<a class="anchor" aria-label="anchor" href="#arg-max-cells"></a></dt>
+<dd><p>For a <code>SpatRaster</code>, the maximum number of cells drawn.</p></dd>
+
+
+<dt id="arg-fun">fun<a class="anchor" aria-label="anchor" href="#arg-fun"></a></dt>
+<dd><p>For a <code>SpatRaster</code>, the function of the aggregation (see
+<code><a href="https://rspatial.github.io/terra/reference/aggregate.html" class="external-link">terra::aggregate()</a></code>). Use <code>"modal"</code> for categories.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -99,7 +111,11 @@ when the call does not specify <code>lon</code>, <code>lat</code> or <code>type<
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Built-in methods: <code>data.frame</code> (and tibbles), <code>sf</code> (reprojected to WGS84),
 <code>sfc</code>, two-column <code>matrix</code> (longitude, latitude), <code>list</code> of equal-length
-vectors.</p>
+vectors, and <code>SpatRaster</code> ('terra').</p>
+<p>A <code>SpatRaster</code> is drawn as polygons, one per cell (the layers are the
+columns, use <code>fill = "&lt;layer&gt;"</code> and <code>weight = 0</code>). To keep the map light,
+a raster of more than <code>max_cells</code> cells is first aggregated by an integer
+factor with the function <code>fun</code>.</p>
     </div>
 
     <div class="section level2">

@@ -138,7 +138,7 @@ kleaflet(q, color = "class", theme = "inrae", title = "Fiji earthquakes",
 
 ``` r
 
-kleaflet(q, tiles = c("CartoDB.Positron", "Esri.WorldImagery"))
+kleaflet(q, tiles = c("Esri.WorldGrayCanvas", "Esri.WorldImagery"))
 ```
 
 Add your own with
@@ -177,7 +177,7 @@ A theme of your own is a base map, a palette and a style:
 ``` r
 
 kleaf_register_theme(
-  "forest", tiles = "CartoDB.Voyager", palette = c("#2d6a4f", "#95d5b2"),
+  "forest", tiles = "Esri.WorldStreetMap", palette = c("#2d6a4f", "#95d5b2"),
   style = list(accent = "#2d6a4f", text = "#1b4332", background = "#f1faee")
 )
 kleaflet(q, color = "class", theme = "forest", title = "Forest theme")

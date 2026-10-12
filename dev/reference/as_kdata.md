@@ -28,6 +28,9 @@ as_kdata(x, ...)
 # S3 method for class 'list'
 as_kdata(x, ...)
 
+# S3 method for class 'SpatRaster'
+as_kdata(x, max_cells = 10000, fun = "mean", ...)
+
 # Default S3 method
 as_kdata(x, ...)
 ```
@@ -42,6 +45,16 @@ as_kdata(x, ...)
 
   Unused, for method extensions.
 
+- max_cells:
+
+  For a `SpatRaster`, the maximum number of cells drawn.
+
+- fun:
+
+  For a `SpatRaster`, the function of the aggregation (see
+  [`terra::aggregate()`](https://rspatial.github.io/terra/reference/aggregate.html)).
+  Use `"modal"` for categories.
+
 ## Value
 
 A data frame or an `sf` object.
@@ -50,7 +63,12 @@ A data frame or an `sf` object.
 
 Built-in methods: `data.frame` (and tibbles), `sf` (reprojected to
 WGS84), `sfc`, two-column `matrix` (longitude, latitude), `list` of
-equal-length vectors.
+equal-length vectors, and `SpatRaster` ('terra').
+
+A `SpatRaster` is drawn as polygons, one per cell (the layers are the
+columns, use `fill = "<layer>"` and `weight = 0`). To keep the map
+light, a raster of more than `max_cells` cells is first aggregated by an
+integer factor with the function `fun`.
 
 ## Examples
 

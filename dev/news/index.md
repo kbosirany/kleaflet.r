@@ -11,6 +11,16 @@
   and view. The result is a `kleaflet` S3 object, turned into a leaflet
   map when printed
   ([`as_leaflet()`](https://kbosirany.github.io/kleaflet.r/dev/reference/as_leaflet.md)).
+- The base maps of the themes `light`, `minimal`, `voyager` and `inrae`
+  are now `Esri.WorldGrayCanvas` and `Esri.WorldStreetMap`: the tiles of
+  CARTO (`CartoDB.*`) return an “API key required” watermark. The theme
+  `dark` still uses CARTO and needs a key.
+- A map of more than 500 features (polygons, points) is drawn on a
+  canvas (`preferCanvas`): the page stays fast with thousands of
+  polygons.
+- A `SpatRaster` (‘terra’) is accepted as input: its cells are drawn as
+  polygons, aggregated to at most `max_cells` cells to keep the map
+  light.
 - Layer types: `circle`, `circle_m`, `marker`, `cluster`, `polygon`,
   `line`, guessed from the data when omitted.
 - Colour scales: continuous, `"bin"` or `"quantile"` for numbers;
